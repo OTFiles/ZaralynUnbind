@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZaralynUnbind</string>
+    <string name="app_title">ZaralynUnbind</string>
+
+    <string name="status_ready">就绪，点击下方按钮解绑设备</string>
+    <string name="status_unbind_sent">解绑请求已发送至 SyncDataService</string>
+    <string name="status_broadcast_sent">解绑广播已发送</string>
+    <string name="status_failed">操作失败: %s</string>
+
+    <string name="button_unbind">解绑设备</string>
+    <string name="button_done">已发送</string>
+
+    <string name="dialog_title">确认解绑</string>
+    <string name="dialog_message">确定要解绑这台设备吗？\n\n解绑后平板将不再受家长端管控，本地密码、管控列表、使用记录等数据将被全部清除。</string>
+    <string name="dialog_confirm">确定</string>
+    <string name="dialog_cancel">取消</string>
+
+    <string name="toast_failed">解绑操作失败，请检查家长管理是否安装</string>
+
+    <string name="info_default">此工具通过向家长管理发送 ACTIONG_RESET 广播来触发设备解绑。该服务 exported=true 且无权限保护，任何应用均可触发。</string>
+    <string name="info_hint">操作完成。如果家长管理正常运行，设备已解绑。建议重启设备确认。</string>
+
+    <string name="detail_title">技术原理</string>
+    <string name="detail_body">原理：SyncDataService 是家长管理 exported=true 的组件，注册了 ACTIONG_RESET (com.readboy.parentmanager.ACTIONG_RESET) 无需权限即可触发。收到广播后，SyncDataService 向 https://parentadmin.readboy.com/v1/machine/cancel_bindings 发送解绑请求，并清除本地密码、管控列表、使用记录等数据。\n\n注意：该方案仅作安全研究用途，请确保你拥有设备所有权。</string>
+</resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material Design 3 调色板（自定义蓝色系） -->
+    <color name="md3_primary">#FF1565C0</color>
+    <color name="md3_on_primary">#FFFFFFFF</color>
+    <color name="md3_primary_container">#FFD1E4FF</color>
+    <color name="md3_on_primary_container">#FF001D36</color>
+    <color name="md3_secondary">#FF565F71</color>
+    <color name="md3_on_secondary">#FFFFFFFF</color>
+    <color name="md3_secondary_container">#FFDAE2F9</color>
+    <color name="md3_on_secondary_container">#FF131C2B</color>
+    <color name="md3_tertiary">#FF71557C</color>
+    <color name="md3_on_tertiary">#FFFFFFFF</color>
+    <color name="md3_error">#FFBA1A1A</color>
+    <color name="md3_surface">#FFFDFBFF</color>
+    <color name="md3_on_surface">#FF1A1C1E</color>
+    <color name="md3_surface_variant">#FFE0E2EC</color>
+    <color name="md3_on_surface_variant">#FF44474E</color>
+    <color name="md3_outline">#FF74777F</color>
+
+    <!-- 状态颜色 -->
+    <color name="status_success">#FF2E7D32</color>
+    <color name="status_error">#FFC62828</color>
+</resources>

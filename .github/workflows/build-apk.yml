@@ -1,0 +1,145 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v3
+      with:
+        gradle-version: 8.3
+        cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+    - name: Build Debug APK
+      id: build
+      run: |
+        set -o pipefail
+        gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build-output.log
+        exit ${PIPESTATUS[0]}
+
+    - name: Upload Build Log On Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: build-output.log
+        if-no-files-found: ignore
+
+    - name: Upload Debug APK
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-apk
+        path: app/build/outputs/apk/debug/app-debug.apk
+        if-no-files-found: ignore
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v3
+      with:
+        gradle-version: 8.3
+        cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+    - name: Decode keystore
+      run: |
+        echo "${{ secrets.OTF_JKS_BASE64 }}" | base64 -d > otf.jks
+
+    - name: Build Release APK
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: gradle assembleRelease --no-daemon --stacktrace
+
+    - name: Rename APK
+      run: |
+        mv app/build/outputs/apk/release/app-release.apk ZaralynUnbind-v${{ github.run_number }}.apk
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.run_number }}
+        name: ZaralynUnbind v${{ github.run_number }}
+        body: |
+          ## ZaralynUnbind
+
+          通过发送 ACTIONG_RESET 广播触发家长管理 SyncDataService 执行设备解绑。
+
+          ### 原理
+
+          - 家长管理 SyncDataService 组件 exported=true 且无权限保护
+          - 任何应用均可发送 `com.readboy.parentmanager.ACTIONG_RESET` 广播
+          - 收到广播后，SyncDataService 向 `https://parentadmin.readboy.com/v1/machine/cancel_bindings` 发送解绑请求
+          - 同时清除本地密码、管控列表、使用记录等数据
+
+          ### 安装说明
+
+          1. 下载 APK
+          2. 在设备上安装
+          3. 打开应用，点击「解绑设备」按钮
+          4. 确认解绑
+
+          ### 注意
+
+          - 需要家长管理已安装（目标为 `com.readboy.parentmanager`）
+          - 需要网络连接（请求发送到云端）
+          - 解绑后建议重启设备
+        files: ZaralynUnbind-v${{ github.run_number }}.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
