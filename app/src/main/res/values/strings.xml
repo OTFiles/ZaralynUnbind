@@ -18,9 +18,9 @@
 
     <string name="toast_failed">解绑操作失败，请检查家长管理是否安装</string>
 
-    <string name="info_default">此工具通过向家长管理发送 ACTIONG_RESET 广播来触发设备解绑。该服务 exported=true 且无权限保护，任何应用均可触发。</string>
-    <string name="info_hint">操作完成。如果家长管理正常运行，设备已解绑。建议重启设备确认。</string>
+    <string name="info_default">此工具通过以下方式解绑设备:\n1. 发送 ACTIONG_RESET 广播到家长管理 SyncDataService（旧版本兼容）\n2. 直接调用 HTTPS 接口 cancel_bindings（对 6.2.8+ 有效）</string>
+    <string name="info_hint">操作完成。如果响应中 status=1 表示解绑成功，建议重启设备确认。</string>
 
     <string name="detail_title">技术原理</string>
-    <string name="detail_body">原理：SyncDataService 是家长管理 exported=true 的组件，注册了 ACTIONG_RESET (com.readboy.parentmanager.ACTIONG_RESET) 无需权限即可触发。收到广播后，SyncDataService 向 https://parentadmin.readboy.com/v1/machine/cancel_bindings 发送解绑请求，并清除本地密码、管控列表、使用记录等数据。\n\n注意：该方案仅作安全研究用途，请确保你拥有设备所有权。</string>
+    <string name="detail_body">【6.2.8 重要变化】\nACTIONG_RESET 广播在 6.2.8 中不再触发解绑（映射到 controlExtend/uploadFunc）。\n\n本工具改用直接调用 HTTPS API 的方式：\nURL: https://parentadmin.readboy.com/v1/machine/cancel_bindings\n签名: MD5(秒时间戳 + APPSECRET + MD5(APP_ID2))\n密钥: de917e0e6b4962061d66d24f6cfdb5bf0d1b9b39（已硬编码在 APK 中）\n\n注意：需要 READ_PHONE_STATE 权限获取设备序列号，否则需要 root 通过 getprop 读取。</string>
 </resources>

@@ -49,18 +49,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/status_text" />
 
-        <!-- 说明文字 -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/info_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/info_default"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/unbind_button" />
-
         <!-- 技术细节卡片 -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/detail_card"
@@ -71,7 +59,7 @@
             app:cardElevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/info_text">
+            app:layout_constraintTop_toBottomOf="@id/unbind_button">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -90,12 +78,13 @@
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/detail_body"
+                    android:id="@+id/detail_info"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="@string/detail_body"
                     android:textSize="13sp"
+                    android:textIsSelectable="true"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/detail_title" />

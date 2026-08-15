@@ -1,15 +1,24 @@
 # ZaralynUnbind
 
-通过发送 `ACTIONG_RESET` 广播触发家长管理 SyncDataService 执行设备解绑。
+通过**直接调用 `cancel_bindings` API** 触发家长管理设备解绑。
+
+## 背景
+
+**重要发现**：在家长管理 6.2.8 中，`ACTIONG_RESET` 广播不再触发解绑——它被重映射到 `MSG 0x26`（UploadControlExtendResponse，控制扩展上传），而非真正的 `MSG_RESET(0x25)`（UploadReSetStatusResponse → cancel_bindings）。
+
+真实解绑只能由以下方式触发：
+1. **云端下发 `reset.status==1`**（全量拉取时判断）
+2. **直接调用 `cancel_bindings` API**（本工具采用的方式）
 
 ## 原理
 
-家长管理 App 的 `SyncDataService` 组件 `exported=true` 且无权限保护，注册了 `com.readboy.parentmanager.ACTIONG_RESET` action。任何应用均可向该组件发送 intent，触发设备解绑流程：
+本工具直接向 `https://parentadmin.readboy.com/v1/machine/cancel_bindings` 发送 POST 请求，使用已知的签名算法（密钥硬编码在 APK 中）：
 
-1. 发送 `ACTIONG_RESET` 广播/服务 intent → SyncDataService
-2. SyncDataService 向 `https://parentadmin.readboy.com/v1/machine/cancel_bindings` 发送解绑请求
-3. 服务端解除平板与家长账户的绑定
-4. 本地数据全清（密码、管控列表、使用记录、商城控制等）
+```java
+signature = MD5(秒时间戳 + APPSECRET + MD5(APP_ID2))
+APPSECRET = "de917e0e6b4962061d66d24f6cfdb5bf0d1b9b39"
+APP_ID2   = "parent-manage"
+```
 
 ## 构建
 
@@ -24,11 +33,11 @@ gradle assembleDebug
 3. 打开应用，点击「解绑设备」
 4. 确认操作
 
-## 注意
+## 权限
 
-- 需要家长管理已安装（目标包名: `com.readboy.parentmanager`）
-- 需要网络连接
-- 解绑后建议重启设备
+- `INTERNET` — 发送 HTTP 请求
+- `READ_PHONE_STATE` — 获取设备序列号（用于 API 签名）
+  - 如果未授予，会尝试 root (`getprop ro.serialno`) 获取
 
 ## 免责声明
 
