@@ -8,4 +8,5 @@ otf.jks
 captures/
 .externalNativeBuild/
 .cxx/
-*.apk.idsig
+*.apk.idsigotf-unbind.jks
+otf-unbind.jks.base64
