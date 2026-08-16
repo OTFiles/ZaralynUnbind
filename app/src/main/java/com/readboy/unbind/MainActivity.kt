@@ -88,18 +88,15 @@ class MainActivity : AppCompatActivity() {
             val signInput = "$seconds$appSecret$md5AppId2"
             val signature = md5(signInput)
 
-            // POST 请求
-            val url = URL("https://parentadmin.readboy.com/v1/machine/cancel_bindings")
+            // GET 请求（POST 会返回 404！服务器只接受 GET）
+            val params = "signature=$signature&imei=$serial&timestamp=$seconds&app_id=parent-manage"
+            val url = URL("https://parentadmin.readboy.com/v1/machine/cancel_bindings?$params")
             val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.doOutput = true
+            conn.requestMethod = "GET"
             conn.connectTimeout = 15000
             conn.readTimeout = 15000
-
-            val params = "signature=$signature&imei=$serial&timestamp=$timestampMs&app_id=parent-manage"
-            conn.outputStream.use { os ->
-                os.write(params.toByteArray())
-            }
+            // 设置 User-Agent 避免被某些服务器拦截
+            conn.setRequestProperty("User-Agent", "ZaralynUnbind/1.0")
 
             val responseCode = conn.responseCode
             val responseBody = if (responseCode in 200..299) {
@@ -113,6 +110,7 @@ class MainActivity : AppCompatActivity() {
                 "HTTP $responseCode\n响应: $responseBody\n\n" +
                 "如果响应中 status=1，解绑成功。\n" +
                 "如果 errno=7018(0x1B5A)，时间戳有误（可忽略，客户端可能已处理）。\n" +
+                "如果 errno=7001，签名验证失败，可能是密钥过期或服务器已更新。\n" +
                 "建议重启设备确认。"
             )
         } catch (e: Exception) {
