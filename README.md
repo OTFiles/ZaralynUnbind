@@ -12,13 +12,20 @@
 
 ## 原理
 
-本工具直接向 `https://parentadmin.readboy.com/v1/machine/cancel_bindings` 发送 POST 请求，使用已知的签名算法（密钥硬编码在 APK 中）：
+本工具直接向 `https://parentadmin.readboy.com/v1/machine/cancel_bindings` 发送 **GET** 请求，使用 `getSign` 签名算法（uid 参与的长签名，密钥硬编码在 APK 中）：
 
 ```java
-signature = MD5(秒时间戳 + APPSECRET + MD5(APP_ID2))
-APPSECRET = "de917e0e6b4962061d66d24f6cfdb5bf0d1b9b39"
-APP_ID2   = "parent-manage"
+// getSign(uid, ts_ms) 算法
+sn = uid + seconds + MD5(seconds + APP_KEY + MD5(APP_ID)) + APP_ID
+APP_KEY = "9b332c2653ce7189da101dac5a63fd4e"
+APP_ID  = "parentsadmin"
+// 请求 query: signature=<sn>&sn=<sn>&imei=<序列号>&timestamp=<秒>&app_id=parent-manage
 ```
+
+> ⚠️ 实测要点：
+> 1. 服务器**只接受 GET**（POST 返回 404）
+> 2. 必须同时传 `signature` 和 `sn` 两个参数（且都用 getSign 长签名）
+> 3. 不要用 getSign2（短 MD5）—— parentadmin 服务器会报「签名不能为空」
 
 ## 构建
 

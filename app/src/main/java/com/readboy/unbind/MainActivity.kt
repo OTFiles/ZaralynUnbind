@@ -80,16 +80,18 @@ class MainActivity : AppCompatActivity() {
 
             val timestampMs = System.currentTimeMillis()
             val seconds = timestampMs / 1000
-            val appSecret = "de917e0e6b4962061d66d24f6cfdb5bf0d1b9b39"
-            val appId2 = "parent-manage"
-
-            // getSign2 算法: MD5(seconds + APPSECRET + MD5(APP_ID2))
-            val md5AppId2 = md5(appId2)
-            val signInput = "$seconds$appSecret$md5AppId2"
-            val signature = md5(signInput)
+            // getSign 算法（非 getSign2）: parentadmin 服务器用 uid 参与签名的长签名
+            // sn = uid + seconds + MD5(seconds + APP_KEY + MD5(APP_ID)) + APP_ID
+            val appKey = "9b332c2653ce7189da101dac5a63fd4e"
+            val appId = "parentsadmin"
+            val md5AppId = md5(appId)
+            val md5Result = md5("$seconds$appKey$md5AppId")
+            val uid = "00000000"
+            val sn = "$uid$seconds$md5Result$appId"
 
             // GET 请求（POST 会返回 404！服务器只接受 GET）
-            val params = "signature=$signature&imei=$serial&timestamp=$seconds&app_id=parent-manage"
+            // 注意：signature 和 sn 都要传，且用 getSign 长签名
+            val params = "signature=$sn&sn=$sn&imei=$serial&timestamp=$seconds&app_id=parent-manage"
             val url = URL("https://parentadmin.readboy.com/v1/machine/cancel_bindings?$params")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
@@ -106,12 +108,17 @@ class MainActivity : AppCompatActivity() {
             }
             conn.disconnect()
 
+            val success = responseCode in 200..299 && responseBody.contains("\"status\":1")
             return@withContext UnbindResult(true,
                 "HTTP $responseCode\n响应: $responseBody\n\n" +
-                "如果响应中 status=1，解绑成功。\n" +
-                "如果 errno=7018(0x1B5A)，时间戳有误（可忽略，客户端可能已处理）。\n" +
-                "如果 errno=7001，签名验证失败，可能是密钥过期或服务器已更新。\n" +
-                "建议重启设备确认。"
+                if (success) {
+                    "解绑成功！服务器返回 status=1。\n建议重启设备确认。"
+                } else {
+                    "如果响应中 status=1，解绑成功。\n" +
+                    "如果 errno=7018(0x1B5A)，时间戳有误（可忽略）。\n" +
+                    "如果 errno=7001，签名验证失败，可能是密钥过期或服务器已更新。\n" +
+                    "建议重启设备确认。"
+                }
             )
         } catch (e: Exception) {
             return@withContext UnbindResult(false,

@@ -22,5 +22,5 @@
     <string name="info_hint">操作完成。如果响应中 status=1 表示解绑成功，建议重启设备确认。</string>
 
     <string name="detail_title">技术原理</string>
-    <string name="detail_body">【6.2.8 重要变化】\nACTIONG_RESET 广播在 6.2.8 中不再触发解绑（映射到 controlExtend/uploadFunc）。\n\n本工具改用直接调用 HTTPS API 的方式：\nURL: https://parentadmin.readboy.com/v1/machine/cancel_bindings\n签名: MD5(秒时间戳 + APPSECRET + MD5(APP_ID2))\n密钥: de917e0e6b4962061d66d24f6cfdb5bf0d1b9b39（已硬编码在 APK 中）\n\n注意：需要 READ_PHONE_STATE 权限获取设备序列号，否则需要 root 通过 getprop 读取。</string>
+    <string name="detail_body">【6.2.8 重要变化】\nACTIONG_RESET 广播在 6.2.8 中不再触发解绑（映射到 controlExtend/uploadFunc）。\n\n本工具改为直接调用 HTTPS API（GET 请求）：\nURL: https://parentadmin.readboy.com/v1/machine/cancel_bindings\n签名(getSign): sn = uid + 秒 + MD5(秒+APP_KEY+MD5(APP_ID)) + APP_ID\n密钥: 9b332c2653ce7189da101dac5a63fd4e\n\n实测要点：\n1. 服务器只接受 GET（POST 返回 404）\n2. signature 和 sn 参数都要传同一长签名\n3. 不要用 getSign2 短 MD5（会报签名不能为空）</string>
 </resources>
